@@ -1,0 +1,72 @@
+Color,Wins,# Games,Win Rate
+Mono-color,240,431,55.70%
+Mono-White,76,127,59.80%
+Mono-Blue,73,135,54.10%
+Mono-Black,55,95,57.90%
+Mono-Red,35,70,50.00%
+Mono-Green,1,4,25.00%
+Mono-color + Splash,2063,3666,56.30%
+Mono-White + Splash,758,1265,59.90%
+Mono-Blue + Splash,315,596,52.90%
+Mono-Black + Splash,345,655,52.70%
+Mono-Red + Splash,136,243,56.00%
+Mono-Green + Splash,509,907,56.10%
+Two-color,114710,196183,58.50%
+Azorius (WU),12593,21796,57.80%
+Dimir (UB),10033,17839,56.20%
+Rakdos (BR),6643,11858,56.00%
+Gruul (RG),3233,5580,57.90%
+Selesnya (GW),3219,5452,59.00%
+Orzhov (WB),23122,38979,59.30%
+Golgari (BG),3067,5457,56.20%
+Simic (GU),1042,1939,53.70%
+Izzet (UR),25879,44847,57.70%
+Boros (RW),25879,42436,61.00%
+Two-color + Splash,223993,395241,56.70%
+Azorius (WU) + Splash,21674,37754,57.40%
+Dimir (UB) + Splash,27988,50377,55.60%
+Rakdos (BR) + Splash,9754,18028,54.10%
+Gruul (RG) + Splash,23379,40151,58.20%
+Selesnya (GW) + Splash,15964,28548,55.90%
+Orzhov (WB) + Splash,32037,55569,57.70%
+Golgari (BG) + Splash,25470,45539,55.90%
+Simic (GU) + Splash,15754,28201,55.90%
+Izzet (UR) + Splash,30614,54434,56.20%
+Boros (RW) + Splash,21359,36640,58.30%
+Three-color,95703,173772,55.10%
+Jeskai (WUR),15825,28383,55.80%
+Sultai (UBG),14227,25859,55.00%
+Mardu (BRW),11108,20078,55.30%
+Temur (RGU),4788,8716,54.90%
+Abzan (GWB),8473,15493,54.70%
+Esper (WUB),16166,28614,56.50%
+Grixis (UBR),6820,12834,53.10%
+Jund (BRG),4357,8431,51.70%
+Naya (RGW),7728,13969,55.30%
+Bant (GWU),6211,11395,54.50%
+Three-color + Splash,130860,234273,55.90%
+Jeskai (WUR) + Splash,7711,13668,56.40%
+Sultai (UBG) + Splash,36111,63967,56.50%
+Mardu (BRW) + Splash,3587,6766,53.00%
+Temur (RGU) + Splash,16686,29651,56.30%
+Abzan (GWB) + Splash,12738,23129,55.10%
+Esper (WUB) + Splash,11453,20297,56.40%
+Grixis (UBR) + Splash,5539,10213,54.20%
+Jund (BRG) + Splash,11416,20672,55.20%
+Naya (RGW) + Splash,9898,17944,55.20%
+Bant (GWU) + Splash,15721,27966,56.20%
+Four-color,16792,30322,55.40%
+Not-Green (WUBR),1349,2490,54.20%
+Not-White (UBRG),3180,5586,56.90%
+Not-Blue (BRGW),1534,2986,51.40%
+Not-Black (RGWU),2869,5193,55.20%
+Not-Red (GWUB),7860,14067,55.90%
+Four-color + Splash,25736,45814,56.20%
+Not-Green (WUBR) + Splash,919,1648,55.80%
+Not-White (UBRG) + Splash,7651,13631,56.10%
+Not-Blue (BRGW) + Splash,2542,4763,53.40%
+Not-Black (RGWU) + Splash,5342,9465,56.40%
+Not-Red (GWUB) + Splash,9282,16307,56.90%
+Five-color,5546,10155,54.60%
+All Colors (WUBRG),5546,10155,54.60%
+All Decks,615643,1089857,56.50%
