@@ -81,9 +81,10 @@ describe('App Component', () => {
     });
     
     await waitFor(() => {
-      const select = screen.getByRole('combobox');
-      expect(select).toBeInTheDocument();
-      expect(select).toHaveValue('dmu');
+      const selects = screen.getAllByRole('combobox');
+      const setSelect = selects[0]; // Set selector is expected to be first
+      expect(setSelect).toBeInTheDocument();
+      expect(setSelect).toHaveValue('dmu');
     });
   });
 
@@ -91,14 +92,15 @@ describe('App Component', () => {
     render(<App />);
     
     await waitFor(() => {
-      const select = screen.getByRole('combobox');
-      expect(select).toBeInTheDocument();
+      const selects = screen.getAllByRole('combobox');
+      expect(selects[0]).toBeInTheDocument();
     });
     
-    const select = screen.getByRole('combobox');
-    fireEvent.change(select, { target: { value: 'bro' } });
+    const selects = screen.getAllByRole('combobox');
+    const setSelect = selects[0];
+    fireEvent.change(setSelect, { target: { value: 'bro' } });
     
-    expect(select.value).toBe('bro');
+    expect(setSelect.value).toBe('bro');
   });
 
   test('toggles global stats visibility', async () => {
@@ -136,8 +138,10 @@ function generateMockCards(count) {
 describe('Core Game Functions', () => {
   let component;
   
-  beforeEach(() => {
-    component = render(<App />);
+  beforeEach(async () => {
+    await act(async () => {
+      component = render(<App />);
+    });
   });
 
   describe('Set Filtering', () => {
@@ -153,11 +157,14 @@ describe('Core Game Functions', () => {
         data: { data: mockSets }
       });
 
-      render(<App />);
+      await act(async () => {
+        render(<App />);
+      });
 
       await waitFor(() => {
-        const select = screen.getByRole('combobox');
-        const options = select.querySelectorAll('option');
+        const selects = screen.getAllByRole('combobox');
+        const setSelect = selects[0];
+        const options = setSelect.querySelectorAll('option');
         
         // Should only have the 'dmu' set (expansion, after 2003, non-digital)
         expect(options).toHaveLength(1);
@@ -224,7 +231,9 @@ describe('Pack Generation', () => {
 
 describe('Draft History and Undo', () => {
   test('undo functionality restores previous state', async () => {
-    render(<App />);
+    await act(async () => {
+      render(<App />);
+    });
     
     // Wait for draft to initialize
     await waitFor(() => {
@@ -296,7 +305,9 @@ describe('Error Handling', () => {
     
     const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
     
-    render(<App />);
+    await act(async () => {
+      render(<App />);
+    });
     
     await waitFor(() => {
       expect(consoleSpy).toHaveBeenCalledWith(

@@ -44,43 +44,63 @@ describe('Utility Functions', () => {
       ...mockCards.lands
     ];
 
-    // Mock implementation of generatePack for testing
-    const generatePack = (cards) => {
-      const commons = cards.filter((card) => card.rarity === 'common' && !card.type_line.includes('Basic Land'));
-      const uncommons = cards.filter((card) => card.rarity === 'uncommon');
-      const rares = cards.filter((card) => card.rarity === 'rare');
-      const mythics = cards.filter((card) => card.rarity === 'mythic');
-      const lands = cards.filter((card) => card.type_line.includes('Basic Land'));
+    // Fisher-Yates shuffle helper
+    const shuffle = (array) => {
+      let currentIndex = array.length, randomIndex;
 
-      const rareOrMythic = mythics.length && Math.random() < 0.125 ? mythics : rares;
-      const rareCard = rareOrMythic.length
-        ? rareOrMythic[Math.floor(Math.random() * rareOrMythic.length)]
-        : commons[Math.floor(Math.random() * commons.length)];
+      while (currentIndex !== 0) {
+        randomIndex = Math.floor(Math.random() * currentIndex);
+        currentIndex--;
 
-      const shuffledUncommons = [...uncommons].sort(() => Math.random() - 0.5);
-      const uncommonCards = shuffledUncommons.slice(0, 3);
+        [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+      }
 
-      const shuffledCommons = [...commons].sort(() => Math.random() - 0.5);
-      const commonCards = shuffledCommons.slice(0, 10);
+      return array;
+    };
+
+    const generatePack = (cards, attempt = 0) => {
+      if (attempt > 10) {
+        console.warn('Max recursion reached');
+        return [];
+      }
+
+      const commons = cards.filter(c => c.rarity === 'common' && !c.type_line.includes('Basic Land'));
+      const uncommons = cards.filter(c => c.rarity === 'uncommon');
+      const rares = cards.filter(c => c.rarity === 'rare');
+      const mythics = cards.filter(c => c.rarity === 'mythic');
+      const lands = cards.filter(c => c.type_line.includes('Basic Land'));
+
+      let rareOrMythicPool = (mythics.length && Math.random() < 0.125) ? mythics : rares;
+      if (!rareOrMythicPool.length) rareOrMythicPool = uncommons.length ? uncommons : commons;
+
+      const rareCard = rareOrMythicPool.length
+        ? rareOrMythicPool[Math.floor(Math.random() * rareOrMythicPool.length)]
+        : null;
+
+      const uncommonCards = uncommons.length
+        ? uncommons.slice(0, 3)
+        : [];
+
+      const commonCards = commons.length
+        ? commons.slice(0, 10)
+        : [];
 
       const landCard = lands.length
         ? lands[Math.floor(Math.random() * lands.length)]
-        : commons[Math.floor(Math.random() * commons.length)];
+        : commons.length ? commons[0] : null;
 
       const pack = [rareCard, ...uncommonCards, ...commonCards, landCard].filter(Boolean);
 
-      const landCount = pack.filter((card) => card.type_line.includes('Basic Land')).length;
+      // If no lands or not exactly 1, return empty pack instead of recursion for now
+      const landCount = pack.filter(card => card.type_line.includes('Basic Land')).length;
       if (landCount !== 1) {
-        return generatePack(cards);
+        console.warn('No valid land or multiple lands found');
+        return pack.length > 0 ? pack : [];
       }
 
-      const rarityOrder = { mythic: 1, rare: 2, uncommon: 3, common: 4, land: 5 };
-      return pack.sort((a, b) => {
-        const aRarity = a.type_line.includes('Basic Land') ? 'land' : a.rarity;
-        const bRarity = b.type_line.includes('Basic Land') ? 'land' : b.rarity;
-        return rarityOrder[aRarity] - rarityOrder[bRarity];
-      });
+      return pack;
     };
+
 
     test('generates pack with 15 cards', () => {
       const pack = generatePack(allCards);
@@ -160,14 +180,14 @@ describe('Utility Functions', () => {
         let cmcScore = Math.max(10 - cmc, 0);
         let typeScore = 0;
         
-        if (card.type_line.includes('Creature')) {
+        if (card.type_line?.includes('Creature')) {
           const power = parseInt(card.power) || 0;
           const toughness = parseInt(card.toughness) || 0;
           typeScore += (power + toughness) / 2;
           typeScore += 2;
-        } else if (card.type_line.includes('Instant') || card.type_line.includes('Sorcery')) {
+        } else if (card.type_line?.includes('Instant') || card.type_line?.includes('Sorcery')) {
           typeScore += 4;
-        } else if (card.type_line.includes('Artifact') || card.type_line.includes('Enchantment')) {
+        } else if (card.type_line?.includes('Artifact') || card.type_line?.includes('Enchantment')) {
           typeScore += 3;
         }
         
@@ -326,15 +346,20 @@ describe('Utility Functions', () => {
           }
         });
       });
-      
-      const sortedColors = Object.entries(colorCounts)
+
+      // Filter colors with count > 0
+      const colorsWithCount = Object.entries(colorCounts)
+        .filter(([_, count]) => count > 0)
         .sort(([, countA], [, countB]) => countB - countA)
-        .map(([color]) => color)
-        .slice(0, 2);
-      
-      player.colors = sortedColors.length > 0 ? sortedColors : player.colors;
+        .map(([color]) => color);
+
+      // Pick either all if only one, or top 2
+      const selectedColors = colorsWithCount.length === 1 ? colorsWithCount : colorsWithCount.slice(0, 2);
+
+      player.colors = selectedColors.length > 0 ? selectedColors : player.colors;
       return player;
     };
+
 
     test('updates colors based on drafted cards', () => {
       const player = {
@@ -397,31 +422,75 @@ describe('Utility Functions', () => {
   describe('suggestLands', () => {
     // Mock implementation
     const suggestLands = (builtDeck) => {
+      const colors = ['W', 'U', 'B', 'R', 'G'];
       const colorCounts = { W: 0, U: 0, B: 0, R: 0, G: 0 };
-      builtDeck.forEach((card) => {
-        (card.colors || []).forEach((color) => colorCounts[color]++);
+
+      // Count how many cards of each color
+      builtDeck.forEach(card => {
+        (card.colors || []).forEach(color => {
+          if (colorCounts[color] !== undefined) {
+            colorCounts[color]++;
+          }
+        });
       });
-      
-      const totalColors = Object.values(colorCounts).reduce((sum, count) => sum + count, 0) || 1;
-      const suggestedLands = [];
-      const totalLandsNeeded = 17;
-      
-      ['W', 'U', 'B', 'R', 'G'].forEach((color) => {
-        const count = Math.round((colorCounts[color] / totalColors) * totalLandsNeeded);
-        for (let i = 0; i < count; i++) {
-          suggestedLands.push({
+
+      const totalCards = Object.values(colorCounts).reduce((sum, c) => sum + c, 0);
+
+      // If no colored cards, return 17 Plains
+      if (totalCards === 0) {
+        return Array.from({ length: 17 }, (_, i) => ({
+          id: `basic-W-${i}`,
+          name: 'Plains',
+          type_line: 'Basic Land',
+          colors: ['W'],
+        }));
+      }
+
+      // Calculate ideal proportional land counts (floored)
+      const totalLands = 17;
+      const floorCounts = {};
+      const remainders = [];
+
+      colors.forEach(color => {
+        const exactCount = (colorCounts[color] / totalCards) * totalLands;
+        floorCounts[color] = Math.floor(exactCount);
+        remainders.push({ color, remainder: exactCount - floorCounts[color] });
+      });
+
+      // Calculate how many lands left to assign due to flooring
+      const assigned = Object.values(floorCounts).reduce((a, b) => a + b, 0);
+      let leftover = totalLands - assigned;
+
+      // Sort colors by largest remainder, assign leftover lands one by one
+      remainders.sort((a, b) => b.remainder - a.remainder);
+
+      for (let i = 0; i < leftover; i++) {
+        floorCounts[remainders[i].color]++;
+      }
+
+      // Build lands array according to final counts
+      const lands = [];
+
+      colors.forEach(color => {
+        const nameMap = {
+          W: 'Plains',
+          U: 'Island',
+          B: 'Swamp',
+          R: 'Mountain',
+          G: 'Forest',
+        };
+
+        for (let i = 0; i < floorCounts[color]; i++) {
+          lands.push({
             id: `basic-${color}-${i}`,
-            name: color === 'W' ? 'Plains' : 
-                  color === 'U' ? 'Island' : 
-                  color === 'B' ? 'Swamp' : 
-                  color === 'R' ? 'Mountain' : 'Forest',
+            name: nameMap[color],
             type_line: 'Basic Land',
-            colors: [color]
+            colors: [color],
           });
         }
       });
-      
-      return suggestedLands;
+
+      return lands;
     };
 
     test('suggests 17 lands total', () => {

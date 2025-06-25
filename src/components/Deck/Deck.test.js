@@ -1,10 +1,10 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import Deck from './components/Deck/Deck';
+import Deck from '../Deck/Deck';
 
 // Mock the Card component
-jest.mock('./components/Card/Card', () => {
+jest.mock('../Card/Card', () => {
   return function MockCard({ card, onRemoveFromDeck, inDeck, disabled, cardStats }) {
     return (
       <div 

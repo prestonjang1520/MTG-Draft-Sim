@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 
 
-const Card = ({ card, onPick, disabled = false, onAddToDeck, onRemoveFromDeck, inDeck = false, cardStats, isSuggested = false, showGlobalStats = false }) => {
+const Card = ({ card, onPick, disabled = false, onAddToDeck, onRemoveFromDeck, inDeck = false, cardStats = {}, isSuggested = false, showGlobalStats = false }) => {
   const [showStats, setShowStats] = useState(false);
   const stats = cardStats[card.name] || {}; // Retrieve stats or empty object
 

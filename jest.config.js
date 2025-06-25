@@ -11,10 +11,16 @@ module.exports = {
     '\\.(jpg|jpeg|png|gif|svg)$': '<rootDir>/__mocks__/fileMock.js',
   },
   
+  extensionsToTreatAsEsm: ['.ts', '.tsx'],
+
   // Transform files
   transform: {
-    '^.+\\.(js|jsx|ts|tsx)$': 'babel-jest',
+    '^.+\\.[tj]sx?$': 'babel-jest',
   },
+
+  transformIgnorePatterns: [
+    "/node_modules/(?!axios)/"
+  ],
   
   // Coverage configuration
   collectCoverageFrom: [

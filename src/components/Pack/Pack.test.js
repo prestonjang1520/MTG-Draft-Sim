@@ -1,11 +1,11 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import Pack from './components/Pack/Pack';
+import Pack from '../Pack/Pack';
 
 // Mock the Card component to simplify testing
-jest.mock('./components/Card/Card', () => {
-  return function MockCard({ card, onPick, disabled, isSuggested, showGlobalStats, cardStats }) {
+jest.mock('../Card/Card', () => {
+  return function MockCard({ card, onPick, disabled, isSuggested, showGlobalStats, cardStats = {} }) {
     return (
       <div 
         data-testid={`card-${card.id}`}

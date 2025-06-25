@@ -1,33 +1,11 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { act } from 'react-dom/test-utils';
 import axios from 'axios';
 import Papa from 'papaparse';
 import Card from './components/Card/Card';
 import Pack from './components/Pack/Pack';
 import Deck from './components/Deck/Deck';
-
-// Sideboard Component
-const Sideboard = ({ sideboardCards, cardStats, onMoveFromSideboard }) => {
-  return (
-    <div className="my-6">
-      <h2 className="text-2xl font-bold text-white mb-4">Sideboard ({sideboardCards.length} cards)</h2>
-      {sideboardCards.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-          {sideboardCards.map((card, index) => (
-            <Card
-              key={`${card.id}-${index}`}
-              card={card}
-              onAddToDeck={onMoveFromSideboard}
-              disabled={false}
-              cardStats={cardStats}
-            />
-          ))}
-        </div>
-      ) : (
-        <p className="text-center text-lg text-gray-400">No cards in sideboard yet.</p>
-      )}
-    </div>
-  );
-};
+import Sideboard from './components/Sideboard/Sideboard';
 
 // Main App Component
 const App = () => {
@@ -446,41 +424,29 @@ const App = () => {
     return sortedPack[0]; // Pick the highest-scoring card
   };
 
-  // The rest of the code remains unchanged (generatePack, initializeAIOpponents, etc.)
   const generatePack = (cards) => {
-    const commons = cards.filter((card) => card.rarity === 'common');
-    const uncommons = cards.filter((card) => card.rarity === 'uncommon');
-    const rares = cards.filter((card) => card.rarity === 'rare');
-    const mythics = cards.filter((card) => card.rarity === 'mythic');
-    const lands = cards.filter((card) => card.type_line.includes('Basic Land'));
+    const basicLands = cards.filter((card) => card.type_line?.includes('Basic Land'));
+    const nonLands = cards.filter((card) => !card.type_line?.includes('Basic Land'));
 
-    const rareOrMythic = mythics.length && Math.random() < 0.125 ? mythics : rares;
-    const rareCard = rareOrMythic.length
-      ? rareOrMythic[Math.floor(Math.random() * rareOrMythic.length)]
-      : commons[Math.floor(Math.random() * commons.length)];
-
-    const shuffledUncommons = [...uncommons].sort(() => Math.random() - 0.5);
-    const uncommonCards = shuffledUncommons.slice(0, 3);
-
-    const shuffledCommons = [...commons].sort(() => Math.random() - 0.5);
-    const commonCards = shuffledCommons.slice(0, 10);
-
-    const landCard = lands.length
-      ? lands[Math.floor(Math.random() * lands.length)]
-      : commons[Math.floor(Math.random() * commons.length)];
-
-    const pack = [rareCard, ...uncommonCards, ...commonCards, landCard].filter(Boolean);
-
-    const landCount = pack.filter((card) => card.type_line.includes('Basic Land')).length;
-    if (landCount !== 1) {
-      console.error(`Invalid pack generated with ${landCount} lands. Regenerating...`);
-      return generatePack(cards);
+    if (basicLands.length === 0) {
+      throw new Error('No Basic Lands available in the card pool.');
     }
 
+    // Shuffle helper
+    const shuffle = (array) => [...array].sort(() => Math.random() - 0.5);
+
+    // Shuffle and select 14 non-land cards
+    const shuffledNonLands = shuffle(nonLands).slice(0, 14);
+
+    // Add one random Basic Land
+    const randomLand = basicLands[Math.floor(Math.random() * basicLands.length)];
+    const pack = [...shuffledNonLands, randomLand];
+
+    // Optional: Sort pack so land is always last or use rarityOrder if needed
     const rarityOrder = { mythic: 1, rare: 2, uncommon: 3, common: 4, land: 5 };
     return pack.sort((a, b) => {
-      const aRarity = a.type_line.includes('Basic Land') ? 'land' : a.rarity;
-      const bRarity = b.type_line.includes('Basic Land') ? 'land' : b.rarity;
+      const aRarity = a.type_line?.includes('Basic Land') ? 'land' : a.rarity;
+      const bRarity = b.type_line?.includes('Basic Land') ? 'land' : b.rarity;
       return rarityOrder[aRarity] - rarityOrder[bRarity];
     });
   };
@@ -694,6 +660,10 @@ const App = () => {
       const loadCardStats = async () => {
         try {
           const response = await fetch(`/data/sets/${selectedSet}/ratings.csv`);
+          if (response == null) {
+            console.error('Failed to fetch card stats: response is undefined or null');
+            return;
+          }
           const csvText = await response.text();
           
           // Parse CSV
@@ -717,11 +687,11 @@ const App = () => {
               console.log(`Loaded stats for ${Object.keys(stats).length} cards in set ${selectedSet}`);
             },
             error: (error) => {
-              console.error('Error parsing CSV:', error);
+              console.log('Error parsing CSV:', error);
             }
           });
         } catch (error) {
-          console.error(`Failed to load card stats for set ${selectedSet}:`, error);
+          console.log(`Failed to load card stats for set ${selectedSet}:`, error);
           setCardStats({});
         }
       };
@@ -778,6 +748,7 @@ const App = () => {
             value={selectedSet}
             onChange={(e) => setSelectedSet(e.target.value)}
             className="bg-gray-800 text-white p-2 rounded"
+            aria-label="Set Selector"
           >
             {sets.map((set) => (
               <option key={set.code} value={set.code}>
